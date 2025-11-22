@@ -1,63 +1,75 @@
-name: Deploy Lambda Function
+name: HCP Terraform – Speculative Plan
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 env:
   TF_CLOUD_ORGANIZATION: NYCJobsDataAlerter
   TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
   TF_WORKSPACE: nyc_tech_jobs_alerter
-  CONFIG_DIRECTORY: "./"
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: read
-  id-token: write
+  CONFIG_DIRECTORY: .
 
 jobs:
-  plan_terraform:
+  terraform-cloud-speculative-run:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1
+        id: upload
         with:
-          terraform_version: 1.14.0
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+          speculative: true
 
-      - name: Initialize Terraform
-        run: terraform init
-
-      - name: Plan Terraform
-        run: terraform plan -out=${{ github.sha }}.tfplan
-
-      - name: Save Terraform plan
-        uses: actions/upload-artifact@v4
+      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1
+        id: run
         with:
-          name: terraform-plan
-          path: ${{ github.sha }}.tfplan
+            workspace: ${{ env.TF_WORKSPACE }}
+            configuration_version: ${{ steps.upload.outputs.configuration_version_id }}
+            plan_only: true
+        continue-on-error: true
 
-  apply_terraform:
-    needs: [plan_terraform]
+      - uses: hashicorp/tfc-workflows-github/actions/plan-output@v1
+        id: plan-output
+        with:
+          plan: ${{ steps.run.outputs.plan_id }}
+
+  terraform-cloud-apply:
+    needs: [terraform-cloud-speculative-run]
     runs-on: ubuntu-latest
-    environment: apply
+    environment:
+      name: apply
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Download Terraform plan
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+    
+      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1
+        id: upload
         with:
-          name: terraform-plan
-          path: ${{ github.sha }}.tfplan
-
-      - name: setup Terraform
-        uses: hashicorp/setup-terraform@v3
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+    
+      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1
+        id: run
         with:
-          terraform_version: 1.14.0
-
-      - name: Apply Terraform
-        run: terraform apply ${{ github.sha }}.tfplan
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.upload.outputs.configuration_version_id }}
+          plan_only: false
+    
+      - name: Wait for run to reach "planned"
+        uses: hashicorp/tfc-workflows-github/actions/wait-for-run@v1
+        id: wait
+        with:
+          run: ${{ steps.run.outputs.run_id }}
+    
+      # Now that the plan is ready, apply it
+      - name: Apply
+        if: ${{ steps.wait.outputs.status == 'planned' }}
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1
+        with:
+          run: ${{ steps.run.outputs.run_id }}
+         
