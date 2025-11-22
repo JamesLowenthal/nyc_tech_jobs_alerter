@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-      TF_CLOUD_TOKEN: ${{ secrets.TF_CLOUD_TOKEN }}
+      TF_CLOUD_TOKEN: ${{ secrets.TF_API_TOKEN }}
       TF_CLOUD_ORGANIZATION: NYCJobsDataAlerter
       TF_CLOUD_WORKSPACE: nyc_tech_jobs_alerter
     steps:
