@@ -1,5 +1,9 @@
 name: Deploy Lambda Function
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -26,9 +30,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.14.0
-
-      - name: Login terraform
-        run: terraform login
 
       - name: Initialize Terraform
         run: terraform init
