@@ -1,5 +1,11 @@
 name: Deploy Lambda Function
 
+env:
+  TF_CLOUD_ORGANIZATION: NYCJobsDataAlerter
+  TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+  TF_WORKSPACE: nyc_tech_jobs_alerter
+  CONFIG_DIRECTORY: "./"
+
 on:
   workflow_dispatch:
   push:
