@@ -13,32 +13,25 @@ permissions:
   contents: read
   id-token: write
 
-env:
-  TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-  TF_CLOUD_ORGANIZATION: NYCJobsDataAlerter
-  TF_WORKSPACE: nyc_tech_jobs_alerter
-  CONFIG_DIRECTORY: .
-
 jobs:
   apply_terraform:
     runs-on: ubuntu-latest
+    env:
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Show env var
+        run: env | grep TF_
+
       - name: setup Terraform
         uses: hashicorp/setup-terraform@v3
-        env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
         with:
           terraform_version: 1.14.0
 
       - name: Initialize Terraform
-        env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
         run: terraform init
 
       - name: Apply Terraform
-        env:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-        run: terraform apply -auto-approve
+        run: terraform plan
