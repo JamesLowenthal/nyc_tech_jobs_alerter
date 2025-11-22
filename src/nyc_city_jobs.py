@@ -4,7 +4,7 @@ import urllib.request
 import configparser
 
 title_includes = ["IT ", "SOFT", "DEVELOP", "OP APPL", "COMPUTER"]
-title_excludes = ["TRANSIT"]
+title_excludes = ["TRANSIT", "DIRECTOR, OFFICE OF DEVELOPMEN"]
 import_columns = [
     "agency",
     "business_title",
