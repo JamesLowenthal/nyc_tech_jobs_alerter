@@ -1,5 +1,6 @@
 venv/
 .terraform/
 *tfstate*
+*tfplan*
 *.zip
 src/python/*
