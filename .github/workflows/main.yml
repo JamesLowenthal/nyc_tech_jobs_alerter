@@ -19,14 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1
+      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.2
         id: upload
         with:
           workspace: ${{ env.TF_WORKSPACE }}
           directory: ${{ env.CONFIG_DIRECTORY }}
           speculative: true
 
-      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1
+      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.2
         id: run
         with:
             workspace: ${{ env.TF_WORKSPACE }}
@@ -34,7 +34,7 @@ jobs:
             plan_only: true
         continue-on-error: true
 
-      - uses: hashicorp/tfc-workflows-github/actions/plan-output@v1
+      - uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.3.2
         id: plan-output
         with:
           plan: ${{ steps.run.outputs.plan_id }}
@@ -47,13 +47,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
     
-      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1
+      - uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.2
         id: upload
         with:
           workspace: ${{ env.TF_WORKSPACE }}
           directory: ${{ env.CONFIG_DIRECTORY }}
     
-      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1
+      - uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.2
         id: run
         with:
           workspace: ${{ env.TF_WORKSPACE }}
@@ -61,7 +61,7 @@ jobs:
           plan_only: false
     
       - name: Wait for run to reach "planned"
-        uses: hashicorp/tfc-workflows-github/actions/wait-for-run@v1
+        uses: hashicorp/tfc-workflows-github/actions/wait-for-run@v1.3.2
         id: wait
         with:
           run: ${{ steps.run.outputs.run_id }}
@@ -69,7 +69,7 @@ jobs:
       # Now that the plan is ready, apply it
       - name: Apply
         if: ${{ steps.wait.outputs.status == 'planned' }}
-        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.3.2
         with:
           run: ${{ steps.run.outputs.run_id }}
          
