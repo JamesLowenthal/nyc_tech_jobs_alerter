@@ -1,7 +1,25 @@
-import csv
-import json
-import urllib.request
 import configparser
+import csv
+import datetime
+import json
+import os
+import urllib.request
+
+import boto3
+
+source_email = os.getenv("SOURCE_EMAIL")
+destination_emails = os.getenv("DESTINATION_EMAILS").split(",")
+
+
+def send_email(subject, body):
+    client = boto3.client("ses", region_name="us-east-1")
+    response = client.send_email(
+        Source=source_email,
+        Destination={"ToAddresses": destination_emails},
+        Message={"Subject": {"Data": subject}, "Body": {"Html": {"Data": body}}},
+    )
+    return response
+
 
 title_includes = ["IT ", "SOFT", "DEVELOP", "OP APPL", "COMPUTER"]
 title_excludes = ["TRANSIT", "DIRECTOR, OFFICE OF DEVELOPMEN"]
@@ -88,5 +106,12 @@ def get_nyc_city_jobs():
     return html_body
 
 
+def main():
+    html_body = get_nyc_city_jobs()
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    send_email(f"NYC City Jobs Update - {current_date}", html_body)
+
+
 if __name__ == "__main__":
-    print(get_nyc_city_jobs())
+    main()
