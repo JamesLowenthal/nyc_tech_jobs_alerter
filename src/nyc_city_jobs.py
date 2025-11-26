@@ -4,6 +4,8 @@ import datetime
 import json
 import os
 import urllib.request
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import boto3
 
@@ -13,11 +15,25 @@ destination_emails = os.getenv("DESTINATION_EMAILS").split(",")
 
 def send_email(subject, body):
     client = boto3.client("ses", region_name="us-east-1")
-    response = client.send_email(
+
+    msg = MIMEMultipart("alternative")
+
+    msg["Subject"] = subject
+    msg["From"] = source_email
+    msg["To"] = ", ".join(destination_emails)
+
+    msg["List-Unsubscribe"] = f"<mailto:{source_email}?subject=unsubscribe>"
+    msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+
+    html_part = MIMEText(body, "html")
+    msg.attach(html_part)
+
+    response = client.send_raw_email(
         Source=source_email,
-        Destination={"ToAddresses": destination_emails},
-        Message={"Subject": {"Data": subject}, "Body": {"Html": {"Data": body}}},
+        Destinations=destination_emails,
+        RawMessage={"Data": msg.as_string()},
     )
+
     return response
 
 
@@ -87,7 +103,7 @@ def get_nyc_city_jobs():
 
     import_columns_headers = ""
     for column in import_columns:
-        import_columns_headers += f"<th>{capitalize_first_letter(column)}</th>"
+        import_columns_headers += f"<th>{column}</th>"
 
     html_body = f"""
     <html>
