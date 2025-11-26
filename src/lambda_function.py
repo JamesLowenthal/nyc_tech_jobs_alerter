@@ -3,13 +3,17 @@ import csv
 import datetime
 import json
 import nyc_city_jobs
+import os
+
+source_email = os.getenv("SOURCE_EMAIL")
+destination_emails = os.getenv("DESTINATION_EMAILS").split(",")
 
 
 def send_email(subject, body):
     client = boto3.client("ses", region_name="us-east-1")
     response = client.send_email(
-        Source="jamesalowenthal@gmail.com",
-        Destination={"ToAddresses": ["jamesalowenthal@gmail.com"]},
+        Source=source_email,
+        Destination={"ToAddresses": destination_emails},
         Message={"Subject": {"Data": subject}, "Body": {"Html": {"Data": body}}},
     )
     return response
