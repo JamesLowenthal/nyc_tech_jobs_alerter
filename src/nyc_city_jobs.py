@@ -33,6 +33,11 @@ import_columns = [
     "post_until",
     "number_of_positions",
 ]
+capitalize_columns = ["agency", "civil_service_title"]
+
+
+def capitalize_first_letter(string):
+    return " ".join([x.capitalize() for x in string.lower().split(" ")])
 
 
 def get_json_data(url):
@@ -74,12 +79,15 @@ def get_nyc_city_jobs():
     for job in it_jobs[0:10]:
         it_job_rows += "<tr>"
         for column in import_columns:
-            it_job_rows += f"<td>{job.get(column, None)}</td>"
+            value = job.get(column, None)
+            if column in capitalize_columns:
+                value = capitalize_first_letter(value)
+            it_job_rows += f"<td>{value}</td>"
         it_job_rows += "</tr>"
 
     import_columns_headers = ""
     for column in import_columns:
-        import_columns_headers += f"<th>{column}</th>"
+        import_columns_headers += f"<th>{capitalize_first_letter(column)}</th>"
 
     html_body = f"""
     <html>
