@@ -62,7 +62,9 @@ resource "aws_lambda_function" "scheduled_lambda" {
 
   environment {
     variables = {
-      ENVIRONMENT = "production"
+      SOURCE_EMAIL       = var.sender_email
+      ENVIRONMENT        = "production"
+      DESTINATION_EMAILS = join(",", var.destination_emails)
     }
   }
 
@@ -113,5 +115,5 @@ resource "aws_lambda_permission" "allow_eventbridge" {
 }
 
 resource "aws_ses_email_identity" "sender" {
-  email = "jamesalowenthal@gmail.com"
+  email = var.sender_email
 }
